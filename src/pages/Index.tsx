@@ -1,5 +1,5 @@
 import React from 'react';
-import DataEntryForm from '@/components/DataEntryForm';
+import CsvUpload from '@/components/CsvUpload';
 import DataVisualization from '@/components/DataVisualization';
 import DataTable from '@/components/DataTable';
 
@@ -12,8 +12,8 @@ interface StudentData {
 const Index = () => {
   const [studentData, setStudentData] = React.useState<StudentData[]>([]);
 
-  const handleDataSubmit = (data: StudentData) => {
-    setStudentData((prev) => [...prev, data]);
+  const handleDataUpload = (data: StudentData[]) => {
+    setStudentData(data);
   };
 
   return (
@@ -25,7 +25,7 @@ const Index = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex justify-center">
-            <DataEntryForm onDataSubmit={handleDataSubmit} />
+            <CsvUpload onDataUpload={handleDataUpload} />
           </div>
           
           <div className="w-full">
