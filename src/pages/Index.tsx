@@ -1,19 +1,47 @@
+
 import React from 'react';
 import CsvUpload from '@/components/CsvUpload';
 import DataVisualization from '@/components/DataVisualization';
 import DataTable from '@/components/DataTable';
 
-interface StudentData {
+interface RawStudentData {
+  testWindow: string;
+  score: number;
+  hours: number;
+}
+
+interface ProcessedStudentData {
   hours: number;
   fallScore: number;
   winterScore: number;
 }
 
 const Index = () => {
-  const [studentData, setStudentData] = React.useState<StudentData[]>([]);
+  const [studentData, setStudentData] = React.useState<ProcessedStudentData[]>([]);
 
-  const handleDataUpload = (data: StudentData[]) => {
-    setStudentData(data);
+  const processRawData = (rawData: RawStudentData[]): ProcessedStudentData[] => {
+    // Group data by hours (assuming same hours for both test windows)
+    const groupedData = rawData.reduce((acc, curr) => {
+      const key = curr.hours;
+      if (!acc[key]) {
+        acc[key] = { hours: key, fallScore: 0, winterScore: 0 };
+      }
+      if (curr.testWindow.toLowerCase() === 'fall') {
+        acc[key].fallScore = curr.score;
+      } else if (curr.testWindow.toLowerCase() === 'winter') {
+        acc[key].winterScore = curr.score;
+      }
+      return acc;
+    }, {} as Record<number, ProcessedStudentData>);
+
+    return Object.values(groupedData).filter(
+      data => data.fallScore !== 0 && data.winterScore !== 0
+    );
+  };
+
+  const handleDataUpload = (rawData: RawStudentData[]) => {
+    const processedData = processRawData(rawData);
+    setStudentData(processedData);
   };
 
   return (

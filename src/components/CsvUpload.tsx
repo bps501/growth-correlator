@@ -1,18 +1,17 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Upload } from 'lucide-react';
 
-interface StudentData {
+interface RawStudentData {
+  testWindow: string;
+  score: number;
   hours: number;
-  fallScore: number;
-  winterScore: number;
 }
 
 interface CsvUploadProps {
-  onDataUpload: (data: StudentData[]) => void;
+  onDataUpload: (data: RawStudentData[]) => void;
 }
 
 const CsvUpload = ({ onDataUpload }: CsvUploadProps) => {
@@ -22,7 +21,6 @@ const CsvUpload = ({ onDataUpload }: CsvUploadProps) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check if it's a CSV file
     if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
       toast({
         title: "Invalid File Type",
@@ -36,15 +34,17 @@ const CsvUpload = ({ onDataUpload }: CsvUploadProps) => {
     reader.onload = (e) => {
       const text = e.target?.result as string;
       const lines = text.split('\n');
-      const data: StudentData[] = [];
+      const data: RawStudentData[] = [];
 
       // Skip header row and process each line
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line) {
-          const [hours, fallScore, winterScore] = line.split(',').map(Number);
+          const [testWindow, scoreStr, hoursStr] = line.split(',').map(s => s.trim());
+          const score = Number(scoreStr);
+          const hours = Number(hoursStr);
           
-          if (isNaN(hours) || isNaN(fallScore) || isNaN(winterScore)) {
+          if (isNaN(score) || isNaN(hours)) {
             toast({
               title: "Invalid Data",
               description: `Row ${i} contains invalid numbers`,
@@ -53,7 +53,7 @@ const CsvUpload = ({ onDataUpload }: CsvUploadProps) => {
             return;
           }
 
-          if (hours < 0 || fallScore < 0 || winterScore < 0) {
+          if (hours < 0 || score < 0) {
             toast({
               title: "Invalid Data",
               description: `Row ${i} contains negative values`,
@@ -62,7 +62,16 @@ const CsvUpload = ({ onDataUpload }: CsvUploadProps) => {
             return;
           }
 
-          data.push({ hours, fallScore, winterScore });
+          if (!['fall', 'winter'].includes(testWindow.toLowerCase())) {
+            toast({
+              title: "Invalid Data",
+              description: `Row ${i} has invalid test window. Must be "fall" or "winter"`,
+              variant: "destructive"
+            });
+            return;
+          }
+
+          data.push({ testWindow, score, hours });
         }
       }
 
@@ -110,9 +119,9 @@ const CsvUpload = ({ onDataUpload }: CsvUploadProps) => {
           <div className="text-sm text-muted-foreground">
             <p>CSV file should have the following columns:</p>
             <ul className="list-disc list-inside mt-1">
+              <li>Test window (fall or winter)</li>
+              <li>Score</li>
               <li>Hours spent on program</li>
-              <li>Fall benchmark score</li>
-              <li>Winter benchmark score</li>
             </ul>
           </div>
         </div>
