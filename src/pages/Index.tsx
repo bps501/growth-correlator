@@ -20,8 +20,14 @@ const Index = () => {
   const [studentData, setStudentData] = React.useState<ProcessedStudentData[]>([]);
 
   const processRawData = (rawData: RawStudentData[]): ProcessedStudentData[] => {
+    // First filter out data points outside the valid time range (240-900 minutes)
+    const validTimeData = rawData.filter(data => {
+      const minutes = data.hours * 60; // Convert hours to minutes
+      return minutes >= 240 && minutes <= 900;
+    });
+
     // Group data by hours (assuming same hours for both test windows)
-    const groupedData = rawData.reduce((acc, curr) => {
+    const groupedData = validTimeData.reduce((acc, curr) => {
       const key = curr.hours;
       if (!acc[key]) {
         acc[key] = { hours: key, fallScore: 0, winterScore: 0 };
